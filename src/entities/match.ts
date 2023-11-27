@@ -18,9 +18,13 @@ export default class Match {
 
 	level: number = 0;
 	players: Player[] = [];
-	time: number = 120;
+	time: number = 400;
 	letters: string = null;
 	running: boolean = false;
+
+	red_pid: number = 0;
+	blue_pid: number = 0;
+
 
 	score = {};
 
@@ -39,11 +43,36 @@ export default class Match {
 			let player = this.players[i];
 			if (player) {
 				player.send(signal, data);
+				for (let key in Player.players) {
+					let player = Player.players[key];
+					if (player) {
+						player.send(signal, data);
+					}
+				}
 			}
 		}
 	}
 
-	broadcastExept(excludedPlayer: Player, signal: string, data?: any) {
+	broadcastExclude(exclude_player: any, signal: string, data?: any) {
+		let totalPlayers = this.players.length;
+		for (let i = totalPlayers - 1; i >= 0; i--) {
+			let player = this.players[i];
+			if (exclude_player.uuid == player.uuid) {
+				continue;
+			}
+			if (player) {
+				for (let key in Player.players) {
+					let player = Player.players[key];
+					if (player.uuid != exclude_player.uuid) {
+						console.log("broadcastExclude", player.uuid, exclude_player.uuid);
+						player.send(signal, data);
+					}
+				}
+			}
+		}
+	}
+
+	broadcastExcept(excludedPlayer: Player, signal: string, data?: any) {
 		let totalPlayers = this.players.length;
 		for (let i = totalPlayers - 1; i >= 0; i--) {
 			let player = this.players[i];
@@ -55,7 +84,15 @@ export default class Match {
 
 	start() {
 		this.running = true;
-		this.broadcast(signal.MATCH, { level: this.level, time: this.time });
+
+		// shuffle the players array
+		this.players.sort(() => Math.random() - 0.5);
+		this.broadcast(signal.MATCH, { 
+			level: this.level, 
+			time: this.time,
+			blue_id: this.players[0].uuid,
+			red_id: this.players[1].uuid,
+		});
 		setTimeout(() => {
 			this.timeup();
 		}, this.time * 1000);
@@ -84,7 +121,9 @@ export default class Match {
 
 		this.players.push(player);
 		player.match = this;
-		this.broadcast(signal.JOIN, { uuid: player.uuid });
+		this.broadcast(signal.JOIN, { 
+			uuid: player.uuid 
+		});
 		this.score[player.uuid] = {
 			score: 0
 		};

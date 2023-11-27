@@ -38,4 +38,5 @@ exports.default = {
      * @param score player scores
      */
     RESULT: '$RESULT',
+    MOVE: 'MOVE'
 };

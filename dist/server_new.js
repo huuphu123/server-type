@@ -92,7 +92,7 @@ var Server = /** @class */ (function () {
                 ws.on('message', function (message) {
                     _this.onMessage(player, message);
                     var dataTransfer = JSON.parse(Buffer.from(message, 'base64').toString());
-                    player.match.broadcastExcept(player, signal_2.default.MOVE, { player: player, data: dataTransfer });
+                    player.match.broadcastExept(player, signal_2.default.MOVE, { player: player, data: dataTransfer });
                 });
                 ws.on('close', function (ws) {
                     _this.onClose(player);
@@ -108,11 +108,25 @@ var Server = /** @class */ (function () {
                     _this.onConnection(player);
                     ws.on('message', function (message) {
                         _this.onMessage(player, message);
+                        console.log(message);
                         var dataTransfer = JSON.parse(Buffer.from(message, 'base64').toString());
-                        // player.match.broadcastExcept(player, signal.MOVE, {player, data: dataTransfer})
-                        // player.match.broadcast(signal.MOVE, {player, data: dataTransfer})
-                        console.log(message, 'in callback on message in setupWebSocket of server.ts');
-                        // Player.broadcast(message, {player, data: dataTransfer})
+                        var signal = dataTransfer['signal'];
+                        player.match.broadcastExept(player, signal.MATCH, { player: player, data: dataTransfer });
+                        if (signal == '$MY_MOVE') {
+                            var data = dataTransfer['data'];
+                            var player_id = dataTransfer['player_id'];
+                            var player_2 = player_1.default.players[player_id];
+                            // player.match.broadcastExept(player, signal.MOVE, {player, data: data})
+                        }
+                        // else if (signal == signal.MATCH) {
+                        // 	player.match.broadcastExept(player, signal.MATCH, {player, data: dataTransfer});
+                        // }
+                        // // dataTransfer['player_id_sender'] = player.uuid
+                        // player.match.broadcastExept(player, signal.MATCH, {player, data: dataTransfer});
+                        // for (let p of player.match.players) {
+                        // 	console
+                        // 	p.send('$PLAYER_SEND' + p.uuid, {player, data: dataTransfer})}
+                        // // player.match.broadcastExept(player, signal.MOVE, {player, data: dataTransfer})
                     });
                     ws.on('close', function (ws) {
                         _this.onClose(player);
@@ -136,11 +150,14 @@ var Server = /** @class */ (function () {
         try {
             var data = JSON.parse(Buffer.from(message, 'base64').toString());
             console.log("Player ".concat(player.uuid, ": "), data);
-            this.eventEmitter.emit(data.signal, { player: player, data: data });
-            var dataTransfer = JSON.parse(Buffer.from(message, 'base64').toString());
-            player.match.broadcastExclude(player, message, dataTransfer);
-            console.log(message, 'in callback on message of server.ts');
-            // player.match.broadcast(signal.MOVE, {player, data: dataTransfer})
+            // this.eventEmitter.emit(data.signal, { player, data });
+            // console.log(player.match)
+            // console.log(player.match.players, 'players')
+            // let dataTransfer = JSON.parse(Buffer.from(message, 'base64').toString())
+            // for (let p of player.match.players) {
+            // 	p.send('$PLAYER_SEND' + p.uuid, {player, data: dataTransfer})}
+            // dataTransfer['player_id_sender'] = player.uuid
+            // player.match.broadcast('$PLAYER_SEND', {player, data: dataTransfer})
         }
         catch (ex) {
             console.error(ex);
@@ -154,129 +171,6 @@ var Server = /** @class */ (function () {
     return Server;
 }());
 exports.default = Server;
-// // import WebSocket, { Server as WebSocketServer } from 'ws';
-// // import * as express from 'express';
-// // import * as http from 'http';
-// // import Player from './entities/player';
-// // import Signal from './enums/signal';
-// // import { EventEmitter } from 'events';
-// // import signal from './enums/signal';
-// // import Match from './entities/match';
-// // declare const Buffer;
-// // export default class Server {
-// // 	static $: Server = null;
-// // 	httpServer: http.Server = null;
-// // 	wss: WebSocketServer = null;
-// // 	config: any = null;
-// // 	eventEmitter: EventEmitter = new EventEmitter();
-// // 	constructor() {
-// // 		Server.$ = this;
-// // 	}
-// // 	async init() {
-// // 		console.log('Loading config...');
-// // 		console.log('Loading dictionary...');
-// // 		if (process.env.PORT) {
-// // 			console.log('Creating http server...');
-// // 			let app = express();
-// // 			this.httpServer = http.createServer(app);
-// // 			this.httpServer.listen(process.env.PORT || this.config.port);
-// // 		}
-// // 		console.log('Setting up ws server...');
-// // 		this.setupWebSocket();
-// // 		this.bindEvents();
-// // 	}
-// // 	bindEvents() {
-// // 		this.eventEmitter.on(signal.MATCH, (eventData) => this.onRequestMatch(eventData));
-// // 	}
-// // 	onRequestMatch({ player, data }) {
-// // 		let match = Match.getMatch();
-// // 		match.join(player);
-// // 	}
-// // 	setupWebSocket() {
-// // 		if (process.env.PORT) {		// Heroku 
-// // 			//@ts-ignore
-// // 			this.wss = new WebSocketServer({ server: this.httpServer });
-// // 			console.log('\x1b[33m%s\x1b[0m', `Websocket server listening on port ${process.env.PORT || this.config.port}...`);
-// // 			this.wss.on('connection', ws => {
-// // 				let player = Player.getPlayer(ws);
-// // 				this.onConnection(player);
-// // 				ws.on('message', (message: string) => {
-// // 					this.onMessage(player, message);
-// // 					let dataTransfer = JSON.parse(Buffer.from(message, 'base64').toString())
-// // 					player.match.broadcastExcept(player, signal.MOVE, {player, data: dataTransfer})
-// // 				});
-// // 				ws.on('close', (ws: WebSocket) => {
-// // 					this.onClose(player);
-// // 				});
-// // 			});
-// // 		} else {					//Local
-// // 			//@ts-ignore
-// // 			this.wss = new WebSocketServer({ port: 8080 }, () => {
-// // 				console.log('\x1b[33m%s\x1b[0m', `Websocket server listening on port 8080...`);
-// // 				this.wss.on('connection', ws => {
-// // 					let player = Player.getPlayer(ws);
-// // 					this.onConnection(player);
-// // 					ws.on('message', (message: string) => {
-// // 						this.onMessage(player, message);
-// // 						console.log(message)
-// // 						let dataTransfer = JSON.parse(Buffer.from(message, 'base64').toString())
-// // 						let signal = dataTransfer['signal']
-// // 						player.match.broadcastExept(player, signal.MATCH, {player, data: dataTransfer});
-// // 						if (signal == '$MY_MOVE') {
-// // 							let data = dataTransfer['data']
-// // 							let player_id = dataTransfer['player_id']
-// // 							let player = Player.players[player_id]
-// // 							// player.match.broadcastExept(player, signal.MOVE, {player, data: data})
-// // 						}
-// // 						// else if (signal == signal.MATCH) {
-// // 						// 	player.match.broadcastExept(player, signal.MATCH, {player, data: dataTransfer});
-// // 						// }
-// // 						// // dataTransfer['player_id_sender'] = player.uuid
-// // 						// player.match.broadcastExept(player, signal.MATCH, {player, data: dataTransfer});
-// // 						// for (let p of player.match.players) {
-// // 						// 	console
-// // 						// 	p.send('$PLAYER_SEND' + p.uuid, {player, data: dataTransfer})}
-// // 						// // player.match.broadcastExept(player, signal.MOVE, {player, data: dataTransfer})
-// // 					});
-// // 					ws.on('close', (ws: WebSocket) => {
-// // 						this.onClose(player);
-// // 					});
-// // 				});
-// // 			});
-// // 		}
-// // 	}
-// // 	onConnection(player: Player) {
-// // 		console.log(`Player ${player.uuid} has connected!`);
-// // 		player.send(Signal.UUID, player.uuid);
-// // 	}
-// // 	onClose(player: Player) {
-// // 		player.remove();
-// // 		console.log(`Player ${player.uuid} has disconnected!`);
-// // 	}
-// // 	onError(player: Player, err) {
-// // 		console.log(`Player ${player.uuid} has encountered an error!`, err);
-// // 	}
-// // 	onMessage(player: Player, message: string) {
-// // 		try {
-// // 			let data = JSON.parse(Buffer.from(message, 'base64').toString());
-// // 			console.log(`Player ${player.uuid}: `, data);
-// // 			// this.eventEmitter.emit(data.signal, { player, data });
-// // 			// console.log(player.match)
-// // 			// console.log(player.match.players, 'players')
-// // 			// let dataTransfer = JSON.parse(Buffer.from(message, 'base64').toString())
-// // 			// for (let p of player.match.players) {
-// // 			// 	p.send('$PLAYER_SEND' + p.uuid, {player, data: dataTransfer})}
-// // 			// dataTransfer['player_id_sender'] = player.uuid
-// // 			// player.match.broadcast('$PLAYER_SEND', {player, data: dataTransfer})
-// // 		} catch (ex) {
-// // 			console.error(ex);
-// // 			console.error(`Player ${player.uuid} unknown package: `, message);
-// // 		}
-// // 	}
-// // 	send(player: Player, signal: string, message: object) {
-// // 		player.send(signal, message);
-// // 	}
-// // }
 // import WebSocket, { Server as WebSocketServer } from 'ws';
 // import * as express from 'express';
 // import * as http from 'http';

@@ -21,6 +21,17 @@ export default class Player {
 		}
 	}
 
+	static broadcast(signal: string, data?: any) {
+		for (let key in Player.players) {
+			let player = Player.players[key];
+			if (player) {
+				player.send(signal, data);
+			}
+		}
+	}
+
+
+
 	ws: WebSocket = null;
 	uuid: number = null;
 	match: Match = null;

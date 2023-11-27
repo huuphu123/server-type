@@ -23,6 +23,14 @@ var Player = /** @class */ (function () {
             return Player.players[uuid];
         }
     };
+    Player.broadcast = function (signal, data) {
+        for (var key in Player.players) {
+            var player = Player.players[key];
+            if (player) {
+                player.send(signal, data);
+            }
+        }
+    };
     Player.prototype.send = function (signal, data) {
         var pack = { signal: signal, data: data };
         try {
